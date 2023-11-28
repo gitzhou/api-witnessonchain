@@ -1,8 +1,10 @@
 # api-witnessonchain
 
+[![build](https://github.com/gitzhou/api-witnessonchain/actions/workflows/build.yml/badge.svg)](https://github.com/gitzhou/api-witnessonchain/actions/workflows/build.yml)
+
 WitnessOnChain is an oracle service for blockchain smart contracts.
 
 - docs: https://api.witnessonchain.com
 - demo: [contract](./src/contracts/demo.ts) and [test](./test/demo.e2e-spec.ts)
 
-![](https://aaron67-public.oss-cn-beijing.aliyuncs.com/20210707192925.jpg)
+<img src="https://github.com/gitzhou/api-witnessonchain/assets/1585505/3126abd1-3862-43bc-999a-7efe12245e88" width="300">
