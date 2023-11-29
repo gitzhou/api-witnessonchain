@@ -2,9 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { V2Module } from '../src/v2/v2.module';
-import { Demo } from '../src/contracts/demo';
+import { DemoVerifySig } from '../src/contracts/demoVerifySig';
 import { AppModule } from '../src/app.module';
 import { getDefaultSigner } from './utils/helper';
+import { WitnessOnChainVerifier } from 'scrypt-ts-lib';
 
 jest.setTimeout(60000); // https://stackoverflow.com/a/72031538
 
@@ -20,7 +21,7 @@ describe('Verify oracle signature in contract Demo (e2e)', () => {
     await app.init();
 
     // load contract
-    Demo.loadArtifact();
+    DemoVerifySig.loadArtifact();
   });
 
   async function get(path: string) {
@@ -32,19 +33,19 @@ describe('Verify oracle signature in contract Demo (e2e)', () => {
   it('should pass', async () => {
     // get oracle public key
     const pubKeyResponse = await get('/info');
-    const oraclePubKey = Demo.parsePubKey(pubKeyResponse);
+    const oraclePubKey = WitnessOnChainVerifier.parsePubKey(pubKeyResponse);
     // create contract instance
-    const instance = new Demo(oraclePubKey);
+    const instance = new DemoVerifySig(oraclePubKey);
     // connect contract instance to the default signer
     await instance.connect(getDefaultSigner());
     // contract deploy
     await instance.deploy();
     // get oracle timestamp response
     const timestampResponse = await get('/v2/timestamp');
-    const data = timestampResponse.data;
-    const sig = Demo.parseSig(timestampResponse);
+    const msg = WitnessOnChainVerifier.parseMsg(timestampResponse);
+    const sig = WitnessOnChainVerifier.parseSig(timestampResponse);
     // contract call
-    const call = async () => await instance.methods.unlock(data, sig);
+    const call = async () => await instance.methods.unlock(msg, sig);
     await expect(call()).resolves.not.toThrow(); // https://stackoverflow.com/a/54548606
   });
 });
