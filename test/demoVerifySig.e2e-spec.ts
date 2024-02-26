@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { V2Module } from '../src/v2/v2.module';
+import { V1Module } from '../src/v1/v1.module';
 import { DemoVerifySig } from '../src/contracts/demoVerifySig';
 import { AppModule } from '../src/app.module';
 import { getDefaultSigner } from './utils/helper';
@@ -14,7 +14,7 @@ describe('Verify oracle signature in contract Demo (e2e)', () => {
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [V2Module, AppModule],
+      imports: [V1Module, AppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
@@ -41,7 +41,7 @@ describe('Verify oracle signature in contract Demo (e2e)', () => {
     // contract deploy
     await instance.deploy();
     // get oracle timestamp response
-    const timestampResponse = await get('/v2/timestamp');
+    const timestampResponse = await get('/v1/timestamp');
     const msg = WitnessOnChainVerifier.parseMsg(timestampResponse);
     const sig = WitnessOnChainVerifier.parseSig(timestampResponse);
     // contract call

@@ -3,7 +3,7 @@ import axios from 'axios';
 import { BadParameter, ServiceUnavailable } from '../errors';
 
 @Injectable()
-export class V2Service {
+export class V1Service {
   /**
    * @param tradingPair e.g. `BTC-USDT`, `BTC-USDC`, etc
    * @param decimal decimal of the returned price

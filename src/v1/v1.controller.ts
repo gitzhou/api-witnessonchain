@@ -2,13 +2,13 @@ import { Controller, Get, Param, Query } from '@nestjs/common';
 import { SigService } from '../rabin/sig.service';
 import { getTimestamp, toBufferLE } from '../utils';
 import { ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { V2Service } from './v2.service';
+import { V1Service } from './v1.service';
 import { BadParameter } from '../errors';
 
-@Controller('v2')
-export class V2Controller {
+@Controller('v1')
+export class V1Controller {
   constructor(
-    private readonly v2Service: V2Service,
+    private readonly v1Service: V1Service,
     private readonly sigService: SigService,
   ) {}
 
@@ -19,7 +19,7 @@ export class V2Controller {
   };
 
   @Get('/timestamp')
-  @ApiTags('v2')
+  @ApiTags('v1')
   @ApiOperation({ summary: 'get timestamp' })
   @ApiQuery({
     name: 'nonce',
@@ -30,7 +30,7 @@ export class V2Controller {
   getTimestamp(@Query('nonce') nonce: string) {
     const timestamp = getTimestamp();
     const data = Buffer.concat([
-      toBufferLE(V2Controller.MARKER.TIMESTAMP, 1), // api marker, 1 byte
+      toBufferLE(V1Controller.MARKER.TIMESTAMP, 1), // api marker, 1 byte
       toBufferLE(timestamp, 4), // timestamp, 4 bytes LE
       Buffer.from(nonce || '', 'hex'), // nonce
     ]);
@@ -42,7 +42,7 @@ export class V2Controller {
   }
 
   @Get('price/:base/:query')
-  @ApiTags('v2')
+  @ApiTags('v1')
   @ApiOperation({ summary: 'get price of trading pair' })
   @ApiParam({
     name: 'base',
@@ -71,11 +71,11 @@ export class V2Controller {
     base = base.trim().toUpperCase();
     const tradingPair = `${query}-${base}`;
     const decimal = 4;
-    const price = await this.v2Service.getOkxPrice(tradingPair, decimal);
+    const price = await this.v1Service.getOkxPrice(tradingPair, decimal);
 
     const timestamp = getTimestamp();
     const data = Buffer.concat([
-      toBufferLE(V2Controller.MARKER.PRICE, 1), // api marker, 1 byte
+      toBufferLE(V1Controller.MARKER.PRICE, 1), // api marker, 1 byte
       toBufferLE(timestamp, 4), // timestamp, 4 bytes LE
       toBufferLE(price, 8), // price, 8 bytes LE
       toBufferLE(decimal, 1), // decimal, 1 byte
@@ -94,7 +94,7 @@ export class V2Controller {
   }
 
   @Get('chaininfo/:chain/:network')
-  @ApiTags('v2')
+  @ApiTags('v1')
   @ApiOperation({ summary: 'get blockchain info' })
   @ApiParam({
     name: 'chain',
@@ -146,7 +146,7 @@ export class V2Controller {
     chain = chain.trim().toUpperCase();
     network = network.trim().toLowerCase();
     const { height, bestBlockHash, chainWork, medianTimePast } =
-      await this.v2Service.getChainInfo(chain, network);
+      await this.v1Service.getChainInfo(chain, network);
 
     // values in the same order as their keys in `optionalFields`
     const optionalSigned = [
@@ -160,7 +160,7 @@ export class V2Controller {
 
     const timestamp = getTimestamp();
     const data = Buffer.concat([
-      toBufferLE(V2Controller.MARKER.CHAININFO, 1), // api marker, 1 byte
+      toBufferLE(V1Controller.MARKER.CHAININFO, 1), // api marker, 1 byte
       toBufferLE(timestamp, 4), // timestamp, 4 bytes LE
       toBufferLE(height, 4), // block height, 4 bytes LE
       toBufferLE(extraMarker, 1), // extra signed marker, 1 byte

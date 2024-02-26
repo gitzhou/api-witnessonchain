@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { SigService } from './rabin/sig.service';
-import { V2Controller } from './v2/v2.controller';
-import { V2Service } from './v2/v2.service';
+import { V1Controller } from './v1/v1.controller';
+import { V1Service } from './v1/v1.service';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [ConfigModule.forRoot({})],
-  controllers: [AppController, V2Controller],
-  providers: [SigService, V2Service],
+  controllers: [AppController, V1Controller],
+  providers: [SigService, V1Service],
 })
 export class AppModule {}
