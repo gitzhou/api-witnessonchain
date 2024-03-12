@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
-import { BadParameter, ServiceUnavailable } from '../errors';
+import { BadParameter, BaseError, ServiceUnavailable } from '../errors';
 
 @Injectable()
 export class V1Service {
@@ -21,7 +21,7 @@ export class V1Service {
         throw new BadParameter(`unsupported trading pair ${tradingPair}`);
       }
     } catch (e) {
-      if (e instanceof BadParameter) {
+      if (e instanceof BaseError) {
         throw e;
       }
       throw new ServiceUnavailable(`error getting OKX price of ${tradingPair}`);
