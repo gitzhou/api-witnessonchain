@@ -16,6 +16,7 @@ export class V1Controller {
     TIMESTAMP: 1,
     PRICE: 2,
     CHAININFO: 3,
+    INSCRIPTION: 4,
   };
 
   @Get('/timestamp')
@@ -180,6 +181,67 @@ export class V1Controller {
       chainWork,
       medianTimePast,
       extraSignedMarker: extraMarker,
+      ...sigResponse,
+    };
+  }
+
+  @Get('inscription/:network/outpoint/:txid/:vout')
+  @ApiTags('v1')
+  @ApiOperation({ summary: 'get inscription from outpoint' })
+  @ApiParam({
+    name: 'network',
+    required: true,
+    type: String,
+    description: 'chain network, only supports testnet now, case insensitive',
+  })
+  @ApiParam({
+    name: 'txid',
+    required: true,
+    type: String,
+    description: 'txid',
+  })
+  @ApiParam({
+    name: 'vout',
+    required: true,
+    type: Number,
+    description: 'output index',
+  })
+  @ApiQuery({
+    name: 'nonce',
+    required: false,
+    type: String,
+    description: 'user nonce',
+  })
+  async getInscription(
+    @Param('network') network: string,
+    @Param('txid') txid: string,
+    @Param('vout') vout: number,
+    @Query('nonce') nonce: string,
+  ) {
+    network = network.trim().toLowerCase();
+    vout = Number(vout);
+    const ins = await this.v1Service.getInscription(network, txid, vout);
+    const bsv20 = ins.data?.bsv20 ? true : false;
+    const { id, amt } = ins.data?.bsv20 || { id: ins.origin.outpoint, amt: 0 };
+    const timestamp = getTimestamp();
+    const data = Buffer.concat([
+      toBufferLE(V1Controller.MARKER.INSCRIPTION, 1), // api marker, 1 byte
+      toBufferLE(timestamp, 4), // timestamp, 4 bytes LE
+      Buffer.from(txid, 'hex'), // txid, 32 bytes
+      toBufferLE(vout, 4), // vout, 4 bytes LE
+      toBufferLE(bsv20 ? 1 : 0, 1), // token type, 1 byte
+      toBufferLE(amt, 8), // amt, 8 bytes LE
+      Buffer.from(id), // id
+      Buffer.from(nonce || '', 'hex'), // nonce
+    ]);
+    const sigResponse = this.sigService.sign(data);
+
+    return {
+      timestamp,
+      outpoint: `${txid}_${vout}`,
+      bsv20,
+      amt,
+      id,
       ...sigResponse,
     };
   }
