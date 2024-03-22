@@ -185,7 +185,7 @@ export class V1Controller {
     };
   }
 
-  @Get('inscription/:network/outpoint/:txid/:vout')
+  @Get('inscription/bsv/:network/outpoint/:txid/:vout')
   @ApiTags('v1')
   @ApiOperation({ summary: 'get inscription from outpoint' })
   @ApiParam({
@@ -227,11 +227,12 @@ export class V1Controller {
     const data = Buffer.concat([
       toBufferLE(V1Controller.MARKER.INSCRIPTION, 1), // api marker, 1 byte
       toBufferLE(timestamp, 4), // timestamp, 4 bytes LE
+      toBufferLE(network === 'mainnet' ? 1 : 0, 1), // network, 1 byte, 0 for mainnet, 1 for testnet
       Buffer.from(txid, 'hex'), // txid, 32 bytes
       toBufferLE(vout, 4), // vout, 4 bytes LE
       toBufferLE(bsv20 ? 1 : 0, 1), // token type, 1 byte
       toBufferLE(amt, 8), // amt, 8 bytes LE
-      Buffer.from(id), // id
+      Buffer.from(id), // inscription id
       Buffer.from(nonce || '', 'hex'), // nonce
     ]);
     const sigResponse = this.sigService.sign(data);
