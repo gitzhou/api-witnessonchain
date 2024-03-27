@@ -220,17 +220,17 @@ export class V1Controller {
   ) {
     network = network.trim().toLowerCase();
     vout = Number(vout);
-    const ins = await this.v1Service.getInscription(network, txid, vout);
-    const bsv20 = ins.data?.bsv20 ? true : false;
-    const { id, amt } = ins.data?.bsv20 || { id: ins.origin.outpoint, amt: 0 };
+    const r = await this.v1Service.getInscription(network, txid, vout);
+    const fungible = r.data?.bsv20 ? 1 : 0;
+    const { id, amt } = r.data?.bsv20 || { id: r.origin.outpoint, amt: 0 };
     const timestamp = getTimestamp();
     const data = Buffer.concat([
       toBufferLE(V1Controller.MARKER.INSCRIPTION, 1), // api marker, 1 byte
       toBufferLE(timestamp, 4), // timestamp, 4 bytes LE
-      toBufferLE(network === 'mainnet' ? 1 : 0, 1), // network, 1 byte, 0 for mainnet, 1 for testnet
-      Buffer.from(txid, 'hex'), // txid, 32 bytes
+      toBufferLE(network === 'mainnet' ? 1 : 0, 1), // network, 1 byte, 1 for mainnet, 0 for testnet
+      Buffer.from(txid, 'hex').reverse(), // txid, 32 bytes LE
       toBufferLE(vout, 4), // vout, 4 bytes LE
-      toBufferLE(bsv20 ? 1 : 0, 1), // token type, 1 byte
+      toBufferLE(fungible, 1), // token type, 1 byte, 1 for fungible, 0 for non-fungible
       toBufferLE(amt, 8), // amt, 8 bytes LE
       Buffer.from(id), // inscription id
       Buffer.from(nonce || '', 'hex'), // nonce
@@ -240,7 +240,7 @@ export class V1Controller {
     return {
       timestamp,
       outpoint: `${txid}_${vout}`,
-      bsv20,
+      fungible,
       amt,
       id,
       ...sigResponse,
