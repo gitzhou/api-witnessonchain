@@ -16,7 +16,6 @@ export class V1Controller {
     TIMESTAMP: 1,
     PRICE: 2,
     CHAININFO: 3,
-    INSCRIPTION: 4,
   };
 
   @Get('/timestamp')
@@ -181,68 +180,6 @@ export class V1Controller {
       chainWork,
       medianTimePast,
       extraSignedMarker: extraMarker,
-      ...sigResponse,
-    };
-  }
-
-  @Get('inscription/bsv/:network/outpoint/:txid/:vout')
-  @ApiTags('v1')
-  @ApiOperation({ summary: 'get inscription from outpoint' })
-  @ApiParam({
-    name: 'network',
-    required: true,
-    type: String,
-    description: 'chain network, only supports testnet now, case insensitive',
-  })
-  @ApiParam({
-    name: 'txid',
-    required: true,
-    type: String,
-    description: 'txid',
-  })
-  @ApiParam({
-    name: 'vout',
-    required: true,
-    type: Number,
-    description: 'output index',
-  })
-  @ApiQuery({
-    name: 'nonce',
-    required: false,
-    type: String,
-    description: 'user nonce',
-  })
-  async getInscription(
-    @Param('network') network: string,
-    @Param('txid') txid: string,
-    @Param('vout') vout: number,
-    @Query('nonce') nonce: string,
-  ) {
-    network = network.trim().toLowerCase();
-    vout = Number(vout);
-    const r = await this.v1Service.getInscription(network, txid, vout);
-    const fungible = r.data?.bsv20 ? 1 : 0;
-    const { id, amt } = r.data?.bsv20 || { id: r.origin.outpoint, amt: 0 };
-    const timestamp = getTimestamp();
-    const data = Buffer.concat([
-      toBufferLE(V1Controller.MARKER.INSCRIPTION, 1), // api marker, 1 byte
-      toBufferLE(timestamp, 4), // timestamp, 4 bytes LE
-      toBufferLE(network === 'mainnet' ? 1 : 0, 1), // network, 1 byte, 1 for mainnet, 0 for testnet
-      Buffer.from(txid, 'hex').reverse(), // txid, 32 bytes LE
-      toBufferLE(vout, 4), // vout, 4 bytes LE
-      toBufferLE(fungible, 1), // token type, 1 byte, 1 for fungible, 0 for non-fungible
-      toBufferLE(amt, 8), // amt, 8 bytes LE
-      Buffer.from(id), // inscription id
-      Buffer.from(nonce || '', 'hex'), // nonce
-    ]);
-    const sigResponse = this.sigService.sign(data);
-
-    return {
-      timestamp,
-      outpoint: `${txid}_${vout}`,
-      fungible,
-      amt,
-      id,
       ...sigResponse,
     };
   }

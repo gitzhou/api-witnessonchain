@@ -1,11 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
-import {
-  BadParameter,
-  BaseError,
-  InscriptionNotFound,
-  ServiceUnavailable,
-} from '../errors';
+import { BadParameter, BaseError, ServiceUnavailable } from '../errors';
 
 @Injectable()
 export class V1Service {
@@ -80,37 +75,6 @@ export class V1Service {
         return this.getMvcChainInfo(network);
       default:
         throw new BadParameter(`unsupported chain ${chain}`);
-    }
-  }
-
-  async getInscription(network: string, txid: string, vout: number) {
-    try {
-      if (!['testnet'].includes(network)) {
-        throw new BadParameter('only supports testnet');
-      }
-      const hosts = {
-        testnet: process.env.INSCRIPTION_API_HOST_TESTNET,
-        mainnet: process.env.INSCRIPTION_API_HOST_MAINNET,
-      };
-      const response = await axios
-        .get(`${hosts[network]}/api/inscriptions/txid/${txid}`)
-        .then((r) => r.data)
-        .then((r) =>
-          r.filter(
-            (o) => o.vout === vout && (o.data?.bsv20 || o.origin?.outpoint),
-          ),
-        );
-      if (response.length === 0) {
-        throw new InscriptionNotFound(`outpoint ${txid}_${vout}`);
-      }
-      return response[0];
-    } catch (e) {
-      if (e instanceof BaseError) {
-        throw e;
-      }
-      throw new ServiceUnavailable(
-        `error getting inscription from outpoint ${txid}_${vout}, ${e}`,
-      );
     }
   }
 }

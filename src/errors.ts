@@ -29,12 +29,3 @@ export class ServiceUnavailable extends BaseError {
     super(503, errorMessage);
   }
 }
-
-export class InscriptionNotFound extends BaseError {
-  constructor(message: string) {
-    const defaultMessage = 'inscription not found';
-    const errorMessage =
-      message === undefined ? defaultMessage : `${defaultMessage}, ${message}`;
-    super(503, errorMessage);
-  }
-}
